@@ -24,11 +24,11 @@ for scene in ${DATASET_PATH_TEST}; do
     echo "${scene}" # whole path
     echo "${scene##*/}" # base file name
     ace_head_path="${ace_head_dir}/${scene##*/}.pt"
-    OMP_NUM_THREADS=12 CUDA_VISIBLE_DEVICES=0 python $testing_exe "${scene}" $model_file --head_network_path ${ace_head_path} \
-    --transformer_json ../transformer/config/nerf_focal_12T1R_256_homo.json --load_scheme2_sc_map True 2>&1 | tee "$out_dir/log_Marepo_${scene##*/}_${datatype}.txt"
+    OMP_NUM_THREADS=12 CUDA_VISIBLE_DEVICES=0,1 python $testing_exe "${scene}" $model_file --head_network_path ${ace_head_path} \
+    --transformer_json ../transformer/config/nerf_focal_12T1R_256_homo.json --load_scheme2_sc_map True --test_batch_size 1 2>&1 | tee "$out_dir/log_Marepo_${scene##*/}_${datatype}.txt"
   fi
 done
-python $read_log_Marepo "7Scenes" "${out_dir}" "${datatype}"
+# python $read_log_Marepo "7Scenes" "${out_dir}" "${datatype}"
 
 ############ benchmark on Finetuned MarepoS ###############
 #### TEST

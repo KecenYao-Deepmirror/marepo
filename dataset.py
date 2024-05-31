@@ -124,7 +124,12 @@ class CamLocDataset(Dataset):
             coord_dir = root_dir / 'depth'
 
         # Find all images. The assumption is that it only contains image files.
-        sorted_rgb_files = sorted(rgb_dir.iterdir())
+        
+        if "testBL" or "BOTTOM_LEFT"in str(root_dir):
+            sorted_rgb_files = [file for file in sorted(rgb_dir.iterdir()) if "color" in file.name]
+        else:
+            sorted_rgb_files = sorted(rgb_dir.iterdir())
+
         num_rgb_files = len(sorted_rgb_files)
         self.rgb_files = sorted_rgb_files
         # Find all ground truth pose files. One per image.

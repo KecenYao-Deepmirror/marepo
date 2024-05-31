@@ -5,6 +5,7 @@ import argparse
 import logging
 import math
 import time
+import pickle
 from distutils.util import strtobool
 from pathlib import Path
 
@@ -98,7 +99,11 @@ if __name__ == '__main__':
                         choices=('train', 'test'),help='data split')
     parser.add_argument('--use_half', type=_strtobool, default=True,
                         help='test with half precision')
-
+    
+    parser.add_argument('--test_batch_size', type=int, default=64,
+                        help='number of test set batch size')
+    parser.add_argument('--save_result', type=_strtobool, default=False,
+                        help='set to true if you want to store the data')
     opt = parser.parse_args()
 
     device = torch.device("cuda")
@@ -120,7 +125,7 @@ if __name__ == '__main__':
     _logger.info(f'Test images found: {len(testset)}')
 
     # Setup dataloader. Batch size 1 by default.
-    testset_loader = DataLoader(testset, shuffle=False, num_workers=6)
+    testset_loader = DataLoader(testset, shuffle=False, num_workers=6,batch_size=opt.test_batch_size)
 
     # Load network weights.
     encoder_state_dict = torch.load(encoder_path, map_location="cpu")
@@ -200,6 +205,12 @@ if __name__ == '__main__':
         ace_visualizer = None
 
     # Testing loop.
+    if opt.save_result:
+        result_dict = {}
+        result_dict['rotation_error'] = []
+        result_dict['translation_error'] = []
+        result_dict['avg_processing_time'] = []
+
     testing_start_time = time.time()
     with torch.no_grad():
         for batch in testset_loader:
@@ -232,8 +243,8 @@ if __name__ == '__main__':
                 ppX = intrinsics_33[0, 2].item()
                 ppY = intrinsics_33[1, 2].item()
                 # We support a single focal length.
-                assert torch.allclose(intrinsics_33[0, 0], intrinsics_33[1, 1])
-
+                # assert torch.allclose(intrinsics_33[0, 0], intrinsics_33[1, 1])
+                
                 # Remove path from file name
                 frame_name = Path(frame_path).name
 
@@ -320,8 +331,12 @@ if __name__ == '__main__':
                                f"{t[0]} {t[1]} {t[2]} "
                                f"{r_err} {t_err} {inlier_count}\n")
 
+            #record the data
+            if opt.save_result:
+                result_dict['avg_processing_time'].append((time.time() - batch_start_time)/opt.test_batch_size)
             avg_batch_time += time.time() - batch_start_time
             num_batches += 1
+
 
     total_frames = len(rErrs)
     assert total_frames == len(testset)
@@ -336,7 +351,12 @@ if __name__ == '__main__':
     mean_tErr = np.mean(tErrs)
 
     # Compute average time.
-    avg_time = avg_batch_time / num_batches
+    avg_time = avg_batch_time / (num_batches * opt.test_batch_size)
+
+    #record the data
+    if opt.save_result:
+        result_dict['rotation_error']= rErrs # deg
+        result_dict['translation_error']= tErrs #cm
 
     # Compute final metrics.
     pct10_5 = pct10_5 / total_frames * 100
@@ -370,3 +390,9 @@ if __name__ == '__main__':
 
     test_log.close()
     pose_log.close()
+    
+    if opt.save_result:
+        result_file_path = output_dir / f'result_{scene_name}_{opt.session}.pkl'
+        with open(result_file_path, 'wb') as f:
+            pickle.dump(result_dict,f)
+        _logger.info(f"Saving result to: {result_file_path}")

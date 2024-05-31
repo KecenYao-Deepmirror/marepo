@@ -448,6 +448,10 @@ class TrainerMarepoTransformer(LightningModule):
         if self.actual_epoch % 1 == 0:
             if self.global_rank == 0:
                 self.save_model()
+        if self.actual_epoch % 10 == 0:
+            if self.global_rank == 0:
+                name, ext = os.path.splitext(self.output_map_file)
+                self.save_model(ckpt_save_path = f"{name}-{self.actual_epoch}ep{ext}")
 
         self.log_training_stats()
 

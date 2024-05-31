@@ -199,7 +199,10 @@ class CamLocDatasetAll(Dataset):
                     self.scene_coord_files = None
 
                 # Find all images. The assumption is that it only contains image files.
-                sorted_rgb_files = sorted(rgb_dir.iterdir())
+                if "testBL" in str(scene):
+                    sorted_rgb_files = [file for file in sorted(rgb_dir.iterdir()) if "color" in file.name]
+                else:
+                    sorted_rgb_files = sorted(rgb_dir.iterdir())
                 num_rgb_files = len(sorted_rgb_files)
                 self.rgb_files.extend(sorted_rgb_files) # ex: /home/shuaichen_nianticlabs_com/storage/map_free_training_scenes/train/mapfree_s00000/train/rgb/frame_00569.jpg
 

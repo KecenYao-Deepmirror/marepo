@@ -172,7 +172,6 @@ def load_multiple_scene(options):
         random_mapping_buffers = options.random_mapping_buffers
         all_mapping_buffers = options.all_mapping_buffers
         center_crop=options.center_crop
-
     train_dataset = CamLocDatasetAll(
         root_dir=options.dataset_path/"train",
         mode=0,  # Default for ACE, we don't need scene coordinates/RGB-D.

@@ -1,5 +1,55 @@
 # Map-Relative Pose Regression for Visual Re-Localization
 
+This is the documentation for finetuning the MAREPO mode with 20240417_174825_gt002_static_yvr_nosunvisor_backseat_60sess_BOTTOM_LEFT dataset.
+
+Documentation can find [here](https://deepmirror.atlassian.net/wiki/pages/resumedraft.action?draftId=2094825480).
+
+1. Install the environment
+```shell
+conda env create -f environment.yml
+conda activate public_marepo
+```
+2. Transform the dataset into 7scenes data format. Change SOURCE_DIR to the path of 20240417_174825_gt002_static_yvr_nosunvisor_backseat_60sess_BOTTOM_LEFT dataset 
+```shell
+cd datasets
+python setup_7scenes_sample.py --source_dir SOURCE_DIR
+```
+3. Place the pretrained model in the right place. 
+
+To run inference with marepo on a test scene, there should be three components: 
+
+The ACE encoder (ace_encoder_pretrained.pt) that is pre-trained from the ACE paper and should be readily available in the repository by default.
+
+We use the pre-trained ACE heads for the scene-specific coordinate prediction. ACE header for 20240417_174825_gt002_static_yvr_nosunvisor_backseat_60sess_BOTTOM_LEFT dataset can be found /mnt/nas/share-all/kecen/ace/model/pretrain/ace.pt. It should be put in the path logs/pretrain/pretrain/ace_model/7Scenes. 
+
+The finetuned marepo pose regression models(transformer) can be found in /mnt/nas/share-all/kecen/ace/model/paper_model/marepo_s_7scenes_testBL/marepo_7scenes_testBL_240405-600ep.pt. It should be put in logs/paper_model/ 
+
+3. (optional) If you want to train/finetune marepo transformer. Tansform our training data into a training/fintune data format.
+```shell
+cd preprocess_scripts
+sh create_7scenes_finetune_dataset.sh
+```
+4. Test ACE (encoder+pretrain head) with your dataset.
+```shell
+cd scripts
+sh test_ace.sh
+```
+
+4. (optional) Finetune marepo with your dataset 
+```shell
+cd scripts
+sh train_marepo_s_7scenes.sh
+```
+
+5.Test marepo (encoder+pretrain head+transformer) with your dataset
+```shell
+cd scripts
+sh test_marepo_s_7scenes.sh
+```
+
+# Origninal REPO Readme
+
+
 **[Shuai Chen](https://chenusc11.github.io/), [Tommaso Cavallari](https://scholar.google.com/citations?user=r7osSm0AAAAJ&hl=en), [Victor Adrian Prisacariu](https://www.robots.ox.ac.uk/~victor/), and [Eric Brachmann](https://ebrach.github.io/) (CVPR 2024 Highlight)**
 
 **[Project page](https://nianticlabs.github.io/marepo/) | [Paper](https://arxiv.org/abs/2404.09884)**

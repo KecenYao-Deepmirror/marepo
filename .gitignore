@@ -14,3 +14,5 @@ output/
 
 # Logs.
 logs/
+
+scripts/lightning_logs

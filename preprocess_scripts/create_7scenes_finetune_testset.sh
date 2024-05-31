@@ -76,10 +76,10 @@ for scene_data in "$testset_dir"/*
 do
   echo "${scene_data##*/}"
   # perform scheme2 data augmentation for 7Scenes
-  CUDA_VISIBLE_DEVICES=7 python ../preprocess_marepo.py \
+  CUDA_VISIBLE_DEVICES=0 python ../preprocess_marepo.py \
   --dataset_path "${testset_dir}/${scene_data##*/}" \
   --dataset_head_network_path ${head_network_path} \
-  --head_network_path ../ace_head_dummy.pt \
+  --head_network_path ../logs/pretrain/ace_models/7Scenes/7scenes_testBL.pt \
   --use_half=False \
   --preprocessing True \
   --trainskip 1 \
@@ -89,10 +89,10 @@ do
   --not_mapfree True
 
   # perform scheme3 data augmentation for 7Scenes
-  CUDA_VISIBLE_DEVICES=7 python ../preprocess_marepo.py \
+  CUDA_VISIBLE_DEVICES=0 python ../preprocess_marepo.py \
   --dataset_path "${testset_dir}/${scene_data##*/}" \
   --dataset_head_network_path ${head_network_path} \
-  --head_network_path ../ace_head_dummy.pt \
+  --head_network_path ../logs/pretrain/ace_models/7Scenes/7scenes_testBL.pt \
   --use_half=False \
   --preprocessing True \
   --trainskip 1 \
@@ -103,10 +103,10 @@ do
   --not_mapfree True
 
   # perform scheme3 data augmentation for 7Scenes
-  CUDA_VISIBLE_DEVICES=7 python ../preprocess_marepo.py \
+  CUDA_VISIBLE_DEVICES=0 python ../preprocess_marepo.py \
   --dataset_path "${testset_dir}/${scene_data##*/}" \
   --dataset_head_network_path ${head_network_path} \
-  --head_network_path ../ace_head_dummy.pt \
+  --head_network_path ../logs/pretrain/ace_models/7Scenes/7scenes_testBL.pt \
   --use_half=False \
   --preprocessing True \
   --trainskip 1 \
@@ -117,10 +117,10 @@ do
   --not_mapfree True
 
 #  # perform scheme3 data augmentation for 7Scenes
-  CUDA_VISIBLE_DEVICES=7 python ../preprocess_marepo.py \
+  CUDA_VISIBLE_DEVICES=0 python ../preprocess_marepo.py \
   --dataset_path "${testset_dir}/${scene_data##*/}" \
   --dataset_head_network_path ${head_network_path} \
-  --head_network_path ../ace_head_dummy.pt \
+  --head_network_path ../logs/pretrain/ace_models/7Scenes/7scenes_testBL.pt \
   --use_half=False \
   --preprocessing True \
   --trainskip 1 \
@@ -131,10 +131,10 @@ do
   --not_mapfree True
 
   # perform scheme3 data augmentation for 7Scenes
-  CUDA_VISIBLE_DEVICES=7 python ../preprocess_marepo.py \
+  CUDA_VISIBLE_DEVICES=0 python ../preprocess_marepo.py \
   --dataset_path "${testset_dir}/${scene_data##*/}" \
   --dataset_head_network_path ${head_network_path} \
-  --head_network_path ../ace_head_dummy.pt \
+  --head_network_path ../logs/pretrain/ace_models/7Scenes/7scenes_testBL.pt \
   --use_half=False \
   --preprocessing True \
   --trainskip 1 \

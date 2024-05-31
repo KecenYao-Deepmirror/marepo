@@ -14,7 +14,7 @@ head_network_path=$(realpath -s "${REPO_PATH}/logs/pretrain/ace_models/7Scenes_p
 for scene_data in "$testset_dir"/*
 do
   # echo "${scene_data##*/}"
-  OMP_NUM_THREADS=12 CUDA_VISIBLE_DEVICES=0 python ../train_marepo.py \
+  OMP_NUM_THREADS=12 CUDA_VISIBLE_DEVICES=0,1 python ../train_marepo.py \
   "${model_name}_${scene_data##*/}_240405" \
   --dataset_path "${testset_dir}/${scene_data##*/}" \
   --dataset_head_network_path ${head_network_path} \
@@ -25,12 +25,12 @@ do
   --trainskip 1 \
   --testskip 1 \
   --learning_rate 0.00001 \
-  --epochs 2 \
+  --epochs 600 \
   --transformer_json ../transformer/config/nerf_focal_12T1R_256_homo.json \
   --marepo_sc_augment True \
   --jitter_rot 15.0 \
-  --resume_from_pretrain True \
-  --pretrain_model_path ../logs/paper_model/marepo/marepo.pt \
+  --resume_train True \
+  --pretrain_model_path ../logs/marepo_7scenes_testBL_240405/marepo_7scenes_testBL_240405-299ep.pt \
   --finetune True \
   --non_mapfree_dataset_naming True \
   2>&1 | tee "tmp/finetune_${scene_data##*/}.txt"
@@ -50,10 +50,10 @@ for scene in ${DATASET_PATH_TEST}; do
     echo "${scene}" # whole path
     echo "${scene##*/}" # base file name
     ace_head_path="${REPO_PATH}/logs/pretrain/ace_models/7Scenes/${scene##*/}.pt"
-    marepo_head_path="${REPO_PATH}/logs/marepo_s_${scene##*/}_240405/marepo_s_${scene##*/}_240405.pt"
-    OMP_NUM_THREADS=12 CUDA_VISIBLE_DEVICES=0 python $testing_exe "${scene}" "$marepo_head_path" --head_network_path ${ace_head_path} \
+    marepo_head_path="${REPO_PATH}/logs/marepo_${scene##*/}_240405/marepo_${scene##*/}_240405.pt"
+    OMP_NUM_THREADS=12 CUDA_VISIBLE_DEVICES=0,1 python $testing_exe "${scene}" "$marepo_head_path" --head_network_path ${ace_head_path} \
     --transformer_json ../transformer/config/nerf_focal_12T1R_256_homo.json --load_scheme2_sc_map True \
     2>&1 | tee "$out_dir/log_Finetune_Marepo_${scene##*/}_${datatype}.txt"
   fi
 done
-python $read_log_Marepo "7Scenes" "${out_dir}" "${datatype}" --finetune True
+# python $read_log_Marepo "7Scenes" "${out_dir}" "${datatype}" --finetune True

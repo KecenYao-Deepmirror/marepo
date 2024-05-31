@@ -10,6 +10,7 @@ import json
 import random
 import numpy as np
 import torch
+import pickle
 from torch.cuda.amp import autocast
 from torch.utils.data import DataLoader
 from marepo.marepo_network import Regressor
@@ -85,7 +86,8 @@ if __name__ == '__main__':
                         help='noise ratio added to the sc map, in percentage 0-1')
     parser.add_argument('--noise_level', type=float, default=0.0,
                         help='noise level added to the sc map, in cm, i.e.0.1m, 0.5m')
-
+    parser.add_argument('--save_result', type=_strtobool, default=False,
+                        help='set to true if you want to store the data')
     opt = parser.parse_args()
     device = torch.device("cuda")
     scene_path = Path(opt.scene)
@@ -186,6 +188,13 @@ if __name__ == '__main__':
     pct25_2 = 0
 
     # Testing loop.
+    result_dict = None
+    if opt.save_result:
+        result_dict = {}
+        result_dict['rotation_error'] = []
+        result_dict['translation_error'] = []
+        result_dict['avg_processing_time'] = []
+
     testing_start_time = time.time()
     cur_batch_frame_index = 0
     with torch.no_grad():
@@ -207,10 +216,19 @@ if __name__ == '__main__':
                 features = network.get_features(image_B1HW)
                 sc = network.get_scene_coordinates(features).float() # [N,3,H,W]
 
+            # empty cache (optional)
+            import gc
+            gc.collect()
+            torch.cuda.empty_cache()
+
             # Predict pose
             with autocast(enabled=False):
                 predict_pose = network.get_pose(sc, intrinsics_B33.to(device))
                 predict_pose = predict_pose.float().cpu()
+            
+            batch_time = time.time() - batch_start_time
+            if opt.save_result:
+                result_dict['avg_processing_time'].append(batch_time/opt.test_batch_size)
 
             rErrs, tErrs, avg_batch_time, num_batches, \
                 pct10_5, pct5, pct2, pct1, \
@@ -228,6 +246,11 @@ if __name__ == '__main__':
     median_tErr = np.median(tErrs)
     mean_rErr = np.mean(rErrs)
     mean_tErr = np.mean(tErrs)
+    
+    #record the data
+    if opt.save_result:
+        result_dict['rotation_error']= rErrs # deg
+        result_dict['translation_error']= tErrs #cm
 
     # Compute average time.
     avg_time = avg_batch_time / total_frames
@@ -264,4 +287,10 @@ if __name__ == '__main__':
 
     test_log.close()
     pose_log.close()
+
+    if opt.save_result:
+        result_file_path = output_dir / f'result_{scene_name}_{opt.session}.pkl'
+        with open(result_file_path, 'wb') as f:
+            pickle.dump(result_dict,f)
+        _logger.info(f"Saving result to: {result_file_path}")
 

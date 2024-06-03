@@ -20,16 +20,16 @@ To run inference with marepo on a test scene, there should be three components:
 
 The ACE encoder (ace_encoder_pretrained.pt) that is pre-trained from the ACE paper and should be readily available in the repository by default.
 
-We use the pre-trained ACE heads for the scene-specific coordinate prediction. ACE header for 20240417_174825_gt002_static_yvr_nosunvisor_backseat_60sess_BOTTOM_LEFT dataset can be found /mnt/nas/share-all/kecen/ace/model/pretrain/ace.pt. It should be put in the path logs/pretrain/pretrain/ace_model/7Scenes. 
+We use the pre-trained ACE heads for the scene-specific coordinate prediction. ACE header for 20240417_174825_gt002_static_yvr_nosunvisor_backseat_60sess_BOTTOM_LEFT dataset can be found /mnt/nas/share-all/kecen/ace/model/pretrain/ace.pt. It should be put under the path logs/pretrain/pretrain/ace_model/7Scenes. 
 
-The finetuned marepo pose regression models(transformer) can be found in /mnt/nas/share-all/kecen/ace/model/paper_model/marepo_s_7scenes_testBL/marepo_7scenes_testBL_240405-600ep.pt. It should be put in logs/paper_model/ 
+The finetuned marepo pose regression models(transformer) can be found in /mnt/nas/share-all/kecen/ace/model/paper_model/marepo_s_7scenes_testBL/marepo_7scenes_testBL_240405-600ep.pt. It should be put under logs/paper_model/ 
 
 3. (optional) If you want to train/finetune marepo transformer. Tansform our training data into a training/fintune data format.
 ```shell
 cd preprocess_scripts
 sh create_7scenes_finetune_dataset.sh
 ```
-4. Test ACE (encoder+pretrain head) with your dataset.
+4. Test ACE (encoder+pretrain head+RANSAC) with your dataset.
 ```shell
 cd scripts
 sh test_ace.sh

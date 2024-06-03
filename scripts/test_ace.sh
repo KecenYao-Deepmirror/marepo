@@ -16,13 +16,13 @@ mkdir -p "$out_dir"
 for scene in ${DATASET_PATH_TEST}; do
   echo "${scene}" # whole path
   echo "${scene##*/}" # base file name
-  python $testing_exe "${scene}" "/workspace/project/marepo/logs/pretrain/ace_models/7Scenes/7scenes_testBL.pt" --test_batch_size 64 --save_result False\
+  python $testing_exe "${scene}" "/workspace/project/marepo/logs/pretrain/ace_models/7Scenes/7scenes_testBL.pt" --test_batch_size 1 --save_result False\
   2>&1 | tee "$out_dir/${scene##*/}/log_${scene##*/}.txt"
 done
 
 ############################################### Train Test ACE Heads #######################################
 # # Test on different batch size
-# test_batch_sizes=(1 8 32 64)
+# test_batch_sizes=(64)
 # out_dir="${REPO_PATH}/logs/mapfree/test"
 # mkdir -p "$out_dir"
 
@@ -31,7 +31,7 @@ done
 #   echo "${scene##*/}" # base file name
 #   for test_batch_size in "${test_batch_sizes[@]}"; do
 #     echo "Test_batch_size: ${test_batch_size}"
-#     python $testing_exe "${scene}" "/workspace/project/marepo/logs/pretrain/ace_models/7Scenes/7scenes_testBL.pt" --test_batch_size ${test_batch_size} --save_result True --session "b${test_batch_size}"\
-#   2>&1 | tee "$out_dir/${scene##*/}/log_${scene##*/}.txt"
+#     python $testing_exe "${scene}" "/workspace/project/marepo/logs/pretrain/ace_models/7Scenes/7scenes_testBL.pt" --test_batch_size ${test_batch_size} --save_result False --session "b${test_batch_size}"\
+#   2>&1 | tee "$out_dir/${scene##*/}/log_${scene##*/}_b${test_batch_size}.txt"
 #   done
 # done

@@ -171,6 +171,7 @@ if __name__ == '__main__':
     # Metrics of interest.
     avg_batch_time = 0
     num_batches = 0
+    times = []
 
     # Keep track of rotation and translation errors for calculation of the median error.
     rErrs = []
@@ -199,44 +200,76 @@ if __name__ == '__main__':
     cur_batch_frame_index = 0
     with torch.no_grad():
         for batch in test_dl:
-            image_B1HW, image_mask_B1HW = batch['image'], batch['image_mask']
-            gt_pose_B44, gt_pose_inv_B44 = batch['pose'], batch['pose_inv']
-            intrinsics_B33, intrinsics_inv_B33 = batch['intrinsics'], batch['intrinsics_inv']
-            scene_coords_B13HW = batch['scene_coords']
-            sc_mask = batch['sc_mask'] if 'sc_mask' in batch.keys() else None
-            filenames = batch['rgb_files']
+            # cold test
+            if num_batches == 0:
+                image_B1HW, image_mask_B1HW = batch['image'], batch['image_mask']
+                gt_pose_B44, gt_pose_inv_B44 = batch['pose'], batch['pose_inv']
+                intrinsics_B33, intrinsics_inv_B33 = batch['intrinsics'], batch['intrinsics_inv']
+                scene_coords_B13HW = batch['scene_coords']
+                sc_mask = batch['sc_mask'] if 'sc_mask' in batch.keys() else None
+                filenames = batch['rgb_files']
+                batch_size = image_B1HW.shape[0]
+                image_B1HW = image_B1HW.to(device, non_blocking=True)
+                batch_start_time = time.time()
 
-            batch_start_time = time.time()
+                # Predict scene coordinates.
+                with autocast(enabled=True):
+                    features = network.get_features(image_B1HW)
+                    sc = network.get_scene_coordinates(features).float() # [N,3,H,W]
 
-            batch_size = image_B1HW.shape[0]
-            image_B1HW = image_B1HW.to(device, non_blocking=True)
-
-            # Predict scene coordinates.
-            with autocast(enabled=True):
-                features = network.get_features(image_B1HW)
-                sc = network.get_scene_coordinates(features).float() # [N,3,H,W]
-
-            # empty cache (optional)
-            import gc
-            gc.collect()
-            torch.cuda.empty_cache()
-
-            # Predict pose
-            with autocast(enabled=False):
-                predict_pose = network.get_pose(sc, intrinsics_B33.to(device))
-                predict_pose = predict_pose.float().cpu()
-            
-            batch_time = time.time() - batch_start_time
-            if opt.save_result:
-                result_dict['avg_processing_time'].append(batch_time/opt.test_batch_size)
-
-            rErrs, tErrs, avg_batch_time, num_batches, \
+                # Predict pose
+                with autocast(enabled=False):
+                    predict_pose = network.get_pose(sc, intrinsics_B33.to(device))
+                    predict_pose = predict_pose.float().cpu()
+        
+                rErrs, tErrs, avg_batch_time, num_batches, \
                 pct10_5, pct5, pct2, pct1, \
                 pct500_10, pct50_5, pct25_2 \
                 = batch_frame_test_time_error_computation(predict_pose, gt_pose_B44, intrinsics_B33, filenames, rErrs, tErrs,
                                                            pct10_5, pct5, pct2, pct1,
                                                            pct500_10, pct50_5, pct25_2,
                                                            pose_log, avg_batch_time, batch_start_time, num_batches, _logger)
+
+                torch.cuda.synchronize()
+            else:
+                
+                
+                torch.cuda.synchronize()
+                batch_start_time = time.time()
+                image_B1HW, image_mask_B1HW = batch['image'], batch['image_mask']
+                gt_pose_B44, gt_pose_inv_B44 = batch['pose'], batch['pose_inv']
+                intrinsics_B33, intrinsics_inv_B33 = batch['intrinsics'], batch['intrinsics_inv']
+                scene_coords_B13HW = batch['scene_coords']
+                sc_mask = batch['sc_mask'] if 'sc_mask' in batch.keys() else None
+                filenames = batch['rgb_files']
+
+                batch_size = image_B1HW.shape[0]
+                image_B1HW = image_B1HW.to(device, non_blocking=True)
+
+                # Predict scene coordinates.
+                with autocast(enabled=True):
+                    features = network.get_features(image_B1HW)
+                    sc = network.get_scene_coordinates(features).float() # [N,3,H,W]
+                torch.cuda.synchronize()
+                batch_end_time = time.time()
+                elapsed = batch_end_time - batch_start_time
+                times.append(elapsed)
+
+                # Predict pose
+                with autocast(enabled=False):
+                    predict_pose = network.get_pose(sc, intrinsics_B33.to(device))
+                    predict_pose = predict_pose.float().cpu()
+
+                if opt.save_result:
+                    result_dict['avg_processing_time'].append(elapsed/opt.test_batch_size)
+
+                rErrs, tErrs, avg_batch_time, num_batches, \
+                    pct10_5, pct5, pct2, pct1, \
+                    pct500_10, pct50_5, pct25_2 \
+                    = batch_frame_test_time_error_computation(predict_pose, gt_pose_B44, intrinsics_B33, filenames, rErrs, tErrs,
+                                                            pct10_5, pct5, pct2, pct1,
+                                                            pct500_10, pct50_5, pct25_2,
+                                                            pose_log, avg_batch_time, batch_start_time, num_batches, _logger)
 
     total_frames = len(rErrs)
     assert total_frames == len(test_dl.dataset.rgb_files)
@@ -281,6 +314,7 @@ if __name__ == '__main__':
     _logger.info(f"Median Error: {median_rErr:.2f} deg, {median_tErr:.2f} cm")
     _logger.info(f"Mean Error: {mean_rErr:.2f} deg, {mean_tErr:.2f} cm")
     _logger.info(f"Avg. processing time: {avg_time * 1000:4.2f} ms")
+    _logger.info(f"Avg. processing time2: {sum(times)/total_frames * 1000:4.2f} ms")
 
     # Write to the test log file as well.
     test_log.write(f"{median_rErr} {median_tErr} {avg_time}\n")

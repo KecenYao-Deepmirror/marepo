@@ -2,7 +2,7 @@
 
 This is the documentation for finetuning the MAREPO mode with 20240417_174825_gt002_static_yvr_nosunvisor_backseat_60sess_BOTTOM_LEFT dataset.
 
-Documentation can find [here](https://deepmirror.atlassian.net/wiki/pages/resumedraft.action?draftId=2094825480).
+Documentation can find [here](https://deepmirror.atlassian.net/wiki/spaces/~7120207697eb51d8a14995bcfdf108a089c2f0/pages/2094825480/MAREPO).
 
 1. Install the environment
 ```shell

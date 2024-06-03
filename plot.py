@@ -1,3 +1,5 @@
+# Run this file if you need to generate comparision graph with ACE and marepo
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
